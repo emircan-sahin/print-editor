@@ -1,0 +1,197 @@
+<div class="flex min-h-screen">
+  <div class="flex flex-col flex-1 overflow-auto">
+    <h1 class="sticky left-0 text-2xl font-medium px-12 py-5 text-white">Baskı editörü</h1>
+    <div class="relative h-96 mx-auto bg-white/5 rounded-md p-6 overflow-hidden"
+      [style]="{ width: customWidth + 'mm', height: customHeight + 'mm' }" (drop)="onDrop($event)"
+      (dragover)="onDragOver($event)" (click)="clearSelection($event)">
+      <div class="absolute top-0 left-0 w-full h-full bg-lined-paper opacity-15"></div>
+      <div class="absolute top-0 left-0 w-full h-full bg-lined-paper-2 opacity-15"></div>
+
+      <div *ngFor="let text of textInputs" (click)="selectText(text, $event)"
+        [attr.contenteditable]="selectedText === text" [ngClass]="{ '!border-blue-500': selectedText === text }"
+        class="border border-transparent border-dashed p-1"
+        [style]="{ position: 'absolute', left: text.x_axis + 'mm', top: text.y_axis + 'mm', fontFamily: text.font, fontSize: text.font_size + 'pt', fontWeight: text.bold ? 'bold' : 'normal', fontStyle: text.italic ? 'italic' : 'normal', textDecoration: (text.underline ? 'underline ' : '') + (text.strikethrough ? 'line-through' : ''), cursor: selectedText === text ? 'text' : 'move'}"
+        draggable="true" (dragstart)="onDragStart($event, text)" [attr.data-id]="text.name">
+        {{ text.value }}
+      </div>
+
+      <div *ngFor="let image of imageInputs" (click)="selectImage(image, $event)"
+        [ngClass]="{ '!border-blue-500': selectedImage === image }" class="border border-transparent border-dashed"
+        [style]="{ position: 'absolute', left: image.x_axis + 'mm', top: image.y_axis + 'mm', cursor: selectedImage === image ? 'pointer' : 'move'}"
+        draggable="true" (dragstart)="onDragStart($event, image)" [attr.data-id]="image.name">
+        <img [src]="image.value" [alt]="image.name" />
+      </div>
+    </div>
+  </div>
+
+  <div class="flex flex-col w-96 bg-[rgb(23,23,23)] p-6">
+    <div class="flex gap-x-2">
+      <lucide-icon name="file"></lucide-icon>
+      <select [(ngModel)]="selectedPaperType" (change)="onPaperTypeChange($event)"
+        class="bg-transparent border border-gray-600 rounded-md p-1 w-16">
+        <option *ngFor="let type of paperTypes" [value]="type">{{ type }}</option>
+      </select>
+    </div>
+
+    <div class="grid grid-cols-2 gap-x-6 mt-4">
+      <div class="flex items-center gap-x-4">
+        <span>X</span>
+        <div class="flex items-center gap-x-2 border border-gray-600 rounded-md p-1">
+          <input type="number" class="bg-transparent w-full" [(ngModel)]="customWidth" placeholder="Genişlik"
+            [readonly]="!isCustomPaper" />
+          <span class="text-sm">mm</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-x-4">
+        <span>Y</span>
+        <div class="flex items-center gap-x-2 border border-gray-600 rounded-md p-1">
+          <input type="number" class="bg-transparent w-full" [(ngModel)]="customHeight" placeholder="Yükseklik"
+            [readonly]="!isCustomPaper" />
+          <span class="text-sm">mm</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-center gap-x-4 mt-6 pt-4 border-t border-white/10">
+      <button class="flex items-center gap-x-2 p-2 hover:bg-white/10 rounded-md"
+        [ngClass]="{ 'bg-white/10': selectedElementType === 'image' }" (click)="selectElementType('image')">
+        <lucide-icon name="image"></lucide-icon>
+        <span>Görsel</span>
+      </button>
+
+      <button class="flex items-center gap-x-2 p-2 hover:bg-white/10 rounded-md"
+        [ngClass]="{ 'bg-white/10': selectedElementType === 'text' }" (click)="selectElementType('text')">
+        <lucide-icon name="file"></lucide-icon>
+        <span>Metin</span>
+      </button>
+    </div>
+
+    <div class="flex flex-col gap-y-4 mt-4 pt-6 border-t border-white/10" *ngIf="selectedElementType">
+      <div class="flex items-center gap-x-2 mb-1" *ngIf="selectedElementType === 'image'">
+        <lucide-icon name="image"></lucide-icon>
+        <span>Görsel</span>
+      </div>
+
+      <div class="flex items-center gap-x-2 mb-1" *ngIf="selectedElementType === 'text'">
+        <lucide-icon name="type"></lucide-icon>
+        <span>Metin</span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-x-6">
+        <div class="flex items-center gap-x-4">
+          <span>X</span>
+          <div class="flex items-center gap-x-2 border border-gray-600 rounded-md p-1">
+            <input type="number" class="bg-transparent w-full"
+              [(ngModel)]="selectedElementType === 'image' ? imageForm.x_axis : textForm.x_axis" placeholder="X Ekseni"
+              (ngModelChange)="selectedElementType === 'image' ? updateImage() : updateText()" />
+            <span class="text-sm">mm</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-x-4">
+          <span>Y</span>
+          <div class="flex items-center gap-x-2 border border-gray-600 rounded-md p-1">
+            <input type="number" class="bg-transparent w-full"
+              [(ngModel)]="selectedElementType === 'image' ? imageForm.y_axis : textForm.y_axis" placeholder="Y Ekseni"
+              (ngModelChange)="selectedElementType === 'image' ? updateImage() : updateText()" />
+            <span class="text-sm">mm</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-y-4" *ngIf="selectedElementType === 'image'">
+        <div class="flex items-center gap-x-2">
+          <span>Görsel seç</span>
+
+          <div class="flex items-center justify-end flex-1">
+            <input type="file" class="hidden" #fileInput (change)="onImageChange($event)" />
+            <input type="text" class="bg-transparent w-full invisible" (ngModelChange)="updateText()" />
+            <button class="flex items-center gap-x-2 p-2 hover:bg-white/10 rounded-md" (click)="fileInput.click()">
+              <lucide-icon name="upload"></lucide-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <span>Alan adı</span>
+          <input type="text" class="bg-transparent border border-gray-600 rounded-md p-1 w-48"
+            [(ngModel)]="imageForm.name" (ngModelChange)="updateImage()" />
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-y-4" *ngIf="selectedElementType === 'text'">
+        <div class="flex items-center justify-between">
+          <span>Alan adı</span>
+          <input type="text" class="bg-transparent border border-gray-600 rounded-md p-1 w-48"
+            [(ngModel)]="textForm.name" (ngModelChange)="updateText()" />
+        </div>
+
+        <div class="flex items-center justify-between">
+          <span>Yazı tipi</span>
+          <select class="bg-transparent border border-gray-600 rounded-md p-1 w-48" [(ngModel)]="textForm.font"
+            (ngModelChange)="updateText()">
+            <option value="Arial">Arial</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Courier New">Courier New</option>
+          </select>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <span>Yazı tipi boyutu</span>
+          <div class="flex items-center gap-x-2 border border-gray-600 rounded-md p-1 w-48">
+            <input type="number" class="bg-transparent w-8" [(ngModel)]="textForm.fontSize"
+              (ngModelChange)="updateText()" placeholder="12" />
+            <span class="text-sm">pt</span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <button class="flex items-center gap-x-2 p-2 hover:bg-white/10 rounded-md" (click)="toggleBold()"
+            [ngClass]="{ 'bg-white/10': selectedText?.bold }">
+            <lucide-icon name="bold"></lucide-icon>
+          </button>
+
+          <button class="flex items-center gap-x-2 p-2 hover:bg-white/10 rounded-md" (click)="toggleItalic()"
+            [ngClass]="{ 'bg-white/10': selectedText?.italic }">
+            <lucide-icon name="italic"></lucide-icon>
+          </button>
+
+          <button class="flex items-center gap-x-2 p-2 hover:bg-white/10 rounded-md" (click)="toggleUnderline()"
+            [ngClass]="{ 'bg-white/10': selectedText?.underline }">
+            <lucide-icon name="underline"></lucide-icon>
+          </button>
+
+          <button class="flex items-center gap-x-2 p-2 hover:bg-white/10 rounded-md" (click)="toggleStrikethrough()"
+            [ngClass]="{ 'bg-white/10': selectedText?.strikethrough }">
+            <lucide-icon name="strikethrough"></lucide-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between" *ngIf="selectedElementType">
+        <button class="flex items-center gap-x-2 p-2 hover:bg-white/10 rounded-md" (click)="setAlign('left')">
+          <lucide-icon name="align-left"></lucide-icon>
+        </button>
+
+        <button class="flex items-center gap-x-2 p-2 hover:bg-white/10 rounded-md" (click)="setAlign('center')">
+          <lucide-icon name="align-center"></lucide-icon>
+        </button>
+
+        <button class="flex items-center gap-x-2 p-2 hover:bg-white/10 rounded-md" (click)="setAlign('right')">
+          <lucide-icon name="align-right"></lucide-icon>
+        </button>
+      </div>
+
+      <button class="flex items-center justify-center gap-x-2 mt-6 p-2 bg-white/10 hover:bg-white/5 rounded-md"
+        *ngIf="selectedElementType && (selectedElementType === 'image' ? !selectedImage : !selectedText)"
+        (click)="selectedElementType === 'image' ? addImage() : addText()">
+        <lucide-icon name="plus"></lucide-icon>
+        <span>Ekle</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<button class="fixed bottom-4 right-4 p-2 flex items-center gap-x-2 bg-white/10 hover:bg-white/5 rounded-md" (click)="exportToJSON()">
+  <lucide-icon name="save"></lucide-icon>
+  <span>Değişiklikleri Kaydet</span>
+</button>

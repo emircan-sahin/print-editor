@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+// inter font
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+body,
+html {
+  background-color: #212121;
+  color: #c7c7c7;
+  font-family: "Inter", sans-serif;
+  font-weight: 300;
+}
+
+input:focus {
+  outline: none;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+[contenteditable]:focus {
+  outline: none;
+}
