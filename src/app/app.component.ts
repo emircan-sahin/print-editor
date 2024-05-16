@@ -104,6 +104,7 @@ export class AppComponent {
 
   toggleStrikethrough() {
     this.textForm.strikethrough = !this.textForm.strikethrough;
+    this.updateText();
   }
 
   addText() {
